@@ -34,15 +34,54 @@ import {
   Eye
 } from 'lucide-react';
 
+const demoVideos = [
+  {
+    id: 'install',
+    title: 'How to download and install app',
+    url: 'https://www.youtube.com/embed/OHou4aGwUN0',
+    duration: '3:45',
+    badge: 'Getting Started',
+    icon: Download,
+    description: 'Learn how to easily download and install the CA Next Door application on your local device.'
+  },
+  {
+    id: 'syllabus',
+    title: 'How to download subject and chapters',
+    url: 'https://www.youtube.com/embed/SjkB3_nILLA',
+    duration: '4:20',
+    badge: 'Database Setup',
+    icon: BookOpen,
+    description: 'Master the syllabus importing system to quickly set up your study targets and milestones.'
+  },
+  {
+    id: 'usage',
+    title: 'How to use CA Next Door App',
+    url: null, // coming soon
+    duration: 'Coming Soon',
+    badge: 'Walkthrough',
+    icon: Sparkles,
+    description: 'Deep dive into the operational spacing engine, active revision plans, and error register analytics.'
+  }
+];
+
 export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [revisionTopic, setRevisionTopic] = useState('Financial Reporting - Consolidation');
   const [scheduledRevisions, setScheduledRevisions] = useState([]);
   const [activeWorkflowStep, setActiveWorkflowStep] = useState(0);
   const [showDemoModal, setShowDemoModal] = useState(false);
+  const [selectedDemoVideoId, setSelectedDemoVideoId] = useState('install');
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [revisionVisualMode, setRevisionVisualMode] = useState('screenshot');
   const [mistakeVisualMode, setMistakeVisualMode] = useState('heatmap');
+  const [showResourcesToast, setShowResourcesToast] = useState(false);
+
+  const triggerResourcesToast = () => {
+    setShowResourcesToast(true);
+    setTimeout(() => {
+      setShowResourcesToast(false);
+    }, 4000);
+  };
 
   // Time remaining to CA Exams
   const [timeLeft, setTimeLeft] = useState({ days: 120, hours: 14, minutes: 32, seconds: 45 });
@@ -350,25 +389,25 @@ export default function App() {
 
   const testimonials = [
     {
-      name: 'Rohan Sharma',
-      role: 'CA Aspirant, All India Rank 14',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80',
+      name: 'Chitransh',
+      role: 'CA Student',
+      color: 'bg-indigo-600 text-white',
       stat: '92% Revision Consistency',
       text: 'CA Next Door changed how I structured my preparation. I used to schedule revisions on spreadsheets which kept breaking. The automated Review Scheduler generated revision rounds automatically, saving me at least 40+ planning hours.',
       metric: '+45h Logged Study'
     },
     {
-      name: 'Pooja Iyer',
-      role: 'Chartered Accountant (Nov 2025 cleared)',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&h=120&q=80',
+      name: 'Yashashvi',
+      role: 'CA Student',
+      color: 'bg-rose-500 text-white',
       stat: 'Reduced Backlog by 78%',
       text: 'The dynamic backlog planner is magical. When I missed targets due to audits or college, it automatically redistributed the pending topics across the upcoming week instead of stressing me out with an impossible mountain.',
       metric: '720h Total Study Tracked'
     },
     {
-      name: 'Aditya Mehta',
-      role: 'CA Aspirant, Group 1 Cleared',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&h=120&q=80',
+      name: 'Maanvi',
+      role: 'CA Student',
+      color: 'bg-amber-400 text-slate-900',
       stat: '+32% Mock Test Growth',
       text: 'The weak chapter detection is scary accurate. It pointed out that my consolidation accounting standards were causing my scores to drop in test series. Focused revisions on those specific chapters boosted my exam confidence.',
       metric: '92% Accuracy Focus'
@@ -496,6 +535,15 @@ export default function App() {
             <a href="#revision" className="text-slate-300 hover:text-indigo-400 transition-colors">Revision Engine</a>
             <a href="#workflow" className="text-slate-300 hover:text-indigo-400 transition-colors">Workflow</a>
             <a href="#why" className="text-slate-300 hover:text-indigo-400 transition-colors">Testimonials</a>
+            <button 
+              onClick={triggerResourcesToast}
+              className="text-slate-300 hover:text-indigo-400 transition-colors flex items-center gap-1.5 focus:outline-none"
+            >
+              <span>Resources</span>
+              <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 scale-90 tracking-wider">
+                Soon
+              </span>
+            </button>
           </div>
 
           <div className="hidden md:flex items-center gap-4">
@@ -557,10 +605,19 @@ export default function App() {
               <a 
                 href="#why" 
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-slate-300 hover:text-indigo-400 font-extrabold py-2"
+                className="block text-slate-300 hover:text-indigo-400 font-extrabold py-2 border-b border-slate-800"
               >
                 Testimonials
               </a>
+              <button 
+                onClick={() => { setMobileMenuOpen(false); triggerResourcesToast(); }}
+                className="w-full text-left text-slate-300 hover:text-indigo-400 font-extrabold py-2 flex items-center justify-between focus:outline-none"
+              >
+                <span>Resources</span>
+                <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 tracking-wider scale-90">
+                  Soon
+                </span>
+              </button>
               
               <div className="pt-4 border-t border-slate-800 flex flex-col gap-3">
                 <button 
@@ -1231,11 +1288,9 @@ export default function App() {
                 {/* Profile card & metrics badge */}
                 <div className="flex justify-between items-center border-t-2 border-black pt-4 mt-6">
                   <div className="flex items-center gap-3">
-                    <img 
-                      src={test.avatar} 
-                      alt={test.name} 
-                      className="w-10 h-10 rounded-full object-cover border border-black shadow-sm"
-                    />
+                    <div className={`w-10 h-10 rounded-full border border-black flex items-center justify-center font-black text-sm shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] uppercase shrink-0 ${test.color}`}>
+                      {test.name.charAt(0)}
+                    </div>
                     <div>
                       <h4 className="text-xs font-black text-slate-900 leading-tight">{test.name}</h4>
                       <p className="text-[10px] text-slate-500 font-semibold leading-tight mt-0.5">{test.role}</p>
@@ -1283,52 +1338,92 @@ export default function App() {
         </div>
       </section>
 
-      <footer className="bg-slate-900 border-t border-slate-800 py-16 px-6 relative z-10">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12 text-xs">
+      <footer className="bg-slate-900 border-t-4 border-black py-16 px-6 relative z-10">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 text-xs">
           
-          {/* Logo & Info column */}
-          <div className="md:col-span-4 space-y-4">
-            <div className="flex items-center gap-3">
-              <img 
-                src="/logo.png" 
-                alt="CA Next Door Logo" 
-                className="w-8 h-8 object-contain rounded-lg"
-              />
-              <span className="font-extrabold text-base tracking-tight text-white">
-                CA Next Door
-              </span>
+          {/* Logo & Info column inside dark neobrutalist card */}
+          <div className="lg:col-span-5">
+            <div className="bg-slate-950 border-2 border-black p-6 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-4">
+              <div className="flex items-center gap-3">
+                <img 
+                  src="/logo.png" 
+                  alt="CA Next Door Logo" 
+                  className="w-9 h-9 object-contain rounded-lg border border-black shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)]"
+                />
+                <span className="font-black text-lg tracking-tight text-white">
+                  CA Next Door
+                </span>
+              </div>
+              <p className="text-slate-400 leading-relaxed font-semibold">
+                The high-fidelity preparation and syllabus tracking command center built specifically for ambitious CA Aspirants. Secure ranks with better preparation discipline.
+              </p>
             </div>
-            <p className="text-slate-400 leading-relaxed max-w-sm">
-              The high-fidelity preparation and syllabus tracking command center built specifically for ambitious CA Aspirants. Secure ranks with better preparation discipline.
-            </p>
           </div>
 
-          {/* Quick Links Column 1 */}
-          <div className="md:col-span-3 space-y-3">
-            <h4 className="font-bold text-indigo-400 uppercase tracking-wider text-[10px]">Platform</h4>
-            <div className="space-y-2 text-slate-300">
-              <a href="#features" className="block hover:text-indigo-400 transition-colors">Features list</a>
-              <a href="#revision" className="block hover:text-indigo-400 transition-colors">Revision Optimizer</a>
-              <a href="#workflow" className="block hover:text-indigo-400 transition-colors">Candidate blueprint</a>
+          {/* Quick Links Column */}
+          <div className="lg:col-span-3 space-y-4">
+            <h4 className="font-black text-white uppercase tracking-wider text-[11px] font-mono flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 inline-block" /> Platform Core
+            </h4>
+            <div className="flex flex-col gap-2">
+              <a 
+                href="#features" 
+                className="inline-block px-3 py-1.5 rounded-lg border border-transparent hover:border-black hover:bg-slate-950 hover:text-white hover:translate-x-[-1px] hover:translate-y-[-1px] font-bold text-slate-400 hover:shadow-[1.5px_1.5px_0px_0px_rgba(99,102,241,1)] transition-all w-max"
+              >
+                Features list
+              </a>
+              <a 
+                href="#revision" 
+                className="inline-block px-3 py-1.5 rounded-lg border border-transparent hover:border-black hover:bg-slate-950 hover:text-white hover:translate-x-[-1px] hover:translate-y-[-1px] font-bold text-slate-400 hover:shadow-[1.5px_1.5px_0px_0px_rgba(99,102,241,1)] transition-all w-max"
+              >
+                Revision Optimizer
+              </a>
+              <a 
+                href="#workflow" 
+                className="inline-block px-3 py-1.5 rounded-lg border border-transparent hover:border-black hover:bg-slate-950 hover:text-white hover:translate-x-[-1px] hover:translate-y-[-1px] font-bold text-slate-400 hover:shadow-[1.5px_1.5px_0px_0px_rgba(99,102,241,1)] transition-all w-max"
+              >
+                Candidate blueprint
+              </a>
             </div>
           </div>
 
           {/* Support Column */}
-          <div className="md:col-span-5 space-y-3">
-            <h4 className="font-bold text-indigo-400 uppercase tracking-wider text-[10px]">Support & Inquiries</h4>
-            <p className="text-slate-400 leading-relaxed">
+          <div className="lg:col-span-4 space-y-4">
+            <h4 className="font-black text-white uppercase tracking-wider text-[11px] font-mono flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 inline-block" /> Help & Operations
+            </h4>
+            <p className="text-slate-400 leading-relaxed font-semibold">
               Have questions regarding the revision dashboard setup or installation widget bugs? Our student support squad is here to assist.
             </p>
-            <p className="text-slate-300 font-bold">
-              📩 <a href="mailto:canextdoor.office@gmail.com" className="hover:text-indigo-400 transition-colors">canextdoor.office@gmail.com</a>
-            </p>
+            <div className="pt-2">
+              <a 
+                href="mailto:canextdoor.office@gmail.com" 
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-extrabold text-xs"
+              >
+                📩 canextdoor.office@gmail.com
+              </a>
+            </div>
           </div>
 
         </div>
 
         {/* Copyright strip */}
-        <div className="max-w-7xl mx-auto border-t border-slate-800 mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-slate-500 text-[10px]">
+        <div className="max-w-7xl mx-auto border-t-2 border-black mt-16 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-slate-500 text-xs font-semibold">
           <p>© 2026 CA Next Door. All rights reserved. Designed for ranks.</p>
+          <div className="flex items-center gap-4 text-[10px] uppercase font-mono">
+            <a 
+              href="https://t.me/canextdoorofficial" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="hover:text-indigo-400 transition-colors font-black text-slate-400"
+            >
+              Telegram community
+            </a>
+            <span>•</span>
+            <span className="text-emerald-500 font-extrabold flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Platform Active
+            </span>
+          </div>
         </div>
       </footer>
 
@@ -1347,35 +1442,155 @@ export default function App() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-3xl bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl relative z-10"
+              className="w-full max-w-5xl bg-white border border-black rounded-3xl overflow-hidden shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] relative z-10"
             >
               {/* Modal Header */}
-              <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                <span className="font-extrabold text-slate-800 flex items-center gap-1.5 text-sm">
-                  <Play size={14} className="fill-indigo-600 text-indigo-600" /> CA Next Door Platform Walkthrough
+              <div className="bg-slate-50 px-6 py-4 border-b border-black flex justify-between items-center">
+                <span className="font-extrabold text-slate-900 flex items-center gap-2 text-sm md:text-base">
+                  <Play size={16} className="fill-indigo-600 text-indigo-600" /> CA Next Door Video Walkthrough Library
                 </span>
                 <button 
                   onClick={() => setShowDemoModal(false)}
-                  className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+                  className="p-1.5 rounded-lg border border-black bg-white hover:bg-slate-50 text-slate-700 transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              {/* Video aspect frame */}
-              <div className="aspect-video w-full bg-black relative">
-                <iframe 
-                  src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" 
-                  title="YouTube video player" 
-                  className="absolute inset-0 w-full h-full border-0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                  allowFullScreen
-                />
-              </div>
+              {/* Main Content Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-12">
+                
+                {/* Left Sidebar: Selector list */}
+                <div className="lg:col-span-5 border-b lg:border-b-0 lg:border-r border-black p-4 md:p-6 bg-slate-50 space-y-4 max-h-[350px] lg:max-h-[500px] overflow-y-auto">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase font-mono bg-black text-white px-2.5 py-0.5 rounded-md border border-black font-extrabold tracking-wider w-max">
+                      Tutorial Engine
+                    </span>
+                    <h3 className="text-lg font-black text-slate-900 mt-2">Available Guides</h3>
+                    <p className="text-xs text-slate-500 font-medium">Click on any video below to switch lessons and learn how to use CA Next Door.</p>
+                  </div>
+                  
+                  <div className="space-y-3.5 pt-2">
+                    {demoVideos.map((video) => {
+                      const IconComponent = video.icon;
+                      const isSelected = selectedDemoVideoId === video.id;
+                      return (
+                        <button
+                          key={video.id}
+                          onClick={() => setSelectedDemoVideoId(video.id)}
+                          className={`w-full text-left p-4 rounded-2xl border border-black transition-all flex gap-3.5 items-start ${
+                            isSelected
+                              ? 'bg-indigo-600 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+                              : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
+                          }`}
+                        >
+                          <div className={`p-2 rounded-xl border border-black shrink-0 ${
+                            isSelected ? 'bg-white text-indigo-600' : 'bg-slate-100 text-slate-900'
+                          }`}>
+                            <IconComponent size={18} />
+                          </div>
+                          <div className="space-y-1 w-full min-w-0">
+                            <div className="flex justify-between items-center gap-2">
+                              <span className={`text-xs font-black uppercase tracking-wider ${
+                                isSelected ? 'text-indigo-200' : 'text-indigo-600'
+                              }`}>
+                                {video.badge}
+                              </span>
+                              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-black ${
+                                isSelected ? 'bg-indigo-700 text-white border-indigo-900' : 'bg-slate-50 text-slate-600'
+                              }`}>
+                                {video.duration}
+                              </span>
+                            </div>
+                            <h4 className="text-xs md:text-sm font-black leading-snug truncate">{video.title}</h4>
+                            <p className={`text-[10px] leading-relaxed line-clamp-2 ${
+                              isSelected ? 'text-indigo-100' : 'text-slate-500'
+                            }`}>
+                              {video.description}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-              {/* Modal Footer info */}
-              <div className="p-4 px-6 text-[10px] text-slate-400 font-medium">
-                💡 Replace this placeholder Rickroll video link with your own Youtube workspace feature demo easily inside App.jsx anytime!
+                {/* Right Area: Player or Placeholder */}
+                <div className="lg:col-span-7 bg-slate-950 flex flex-col justify-between overflow-hidden">
+                  
+                  {/* Current Active Video Container */}
+                  {(() => {
+                    const activeVideo = demoVideos.find(v => v.id === selectedDemoVideoId) || demoVideos[0];
+                    if (activeVideo.url) {
+                      return (
+                        <div className="w-full aspect-video lg:aspect-auto lg:h-[400px] bg-black relative animate-fade-in">
+                          <iframe 
+                            src={`${activeVideo.url}?autoplay=1&rel=0`} 
+                            title={activeVideo.title}
+                            className="absolute inset-0 w-full h-full border-0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            allowFullScreen
+                          />
+                        </div>
+                      );
+                    } else {
+                      // Coming Soon Premium State Placeholder
+                      return (
+                        <div className="w-full min-h-[300px] lg:h-[400px] bg-gradient-to-br from-indigo-950 via-slate-950 to-purple-950 flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
+                          {/* Decorative subtle background blobs */}
+                          <div className="absolute top-[20%] left-[20%] w-[150px] h-[150px] rounded-full blur-[80px] opacity-[0.25] bg-indigo-500 pointer-events-none" />
+                          <div className="absolute bottom-[20%] right-[20%] w-[150px] h-[150px] rounded-full blur-[80px] opacity-[0.25] bg-purple-500 pointer-events-none" />
+                          
+                          <div className="space-y-6 relative z-10 max-w-sm">
+                            <div className="inline-flex p-4 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 animate-pulse">
+                              <Sparkles size={36} />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <span className="text-[9px] uppercase font-mono bg-indigo-500 text-white px-2 py-0.5 rounded font-black border border-indigo-400 tracking-wider">
+                                Video Coming Soon
+                              </span>
+                              <h3 className="text-xl md:text-2xl font-black text-white tracking-tight">{activeVideo.title}</h3>
+                              <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                                We are putting the finishing touches on a masterclass walkthrough that guides you through the spaced revision workflow and tracker engine.
+                              </p>
+                            </div>
+
+                            {/* Quick Action to Telegram */}
+                            <div className="pt-2">
+                              <a
+                                href="https://t.me/canextdoorofficial"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white border-2 border-black rounded-xl text-xs font-extrabold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                              >
+                                <MessageSquare size={14} /> Join Telegram for Updates
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                  })()}
+
+                  {/* Active Video Info Footer inside right column */}
+                  {(() => {
+                    const activeVideo = demoVideos.find(v => v.id === selectedDemoVideoId) || demoVideos[0];
+                    return (
+                      <div className="bg-slate-900 border-t border-slate-800 p-4 px-6 flex justify-between items-center text-xs">
+                        <div className="space-y-1 min-w-0">
+                          <p className="text-slate-400 font-medium text-[10px] uppercase font-mono tracking-wider">Now Playing</p>
+                          <h4 className="text-white font-extrabold truncate">{activeVideo.title}</h4>
+                        </div>
+                        <span className="text-slate-400 font-mono text-[10px] shrink-0">
+                          {activeVideo.url ? '📺 Standard Embed' : '⏳ Recording...'}
+                        </span>
+                      </div>
+                    );
+                  })()}
+
+                </div>
+
               </div>
             </motion.div>
           </div>
@@ -1455,6 +1670,26 @@ export default function App() {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* RESOURCES COMING SOON TOAST */}
+      <AnimatePresence>
+        {showResourcesToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-8 right-8 z-50 bg-slate-900 border-2 border-black p-4 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-white flex items-center gap-3 max-w-sm"
+          >
+            <div className="bg-indigo-600 p-2 rounded-xl border border-black shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] text-white shrink-0">
+              <Sparkles size={16} className="animate-pulse" />
+            </div>
+            <div>
+              <h4 className="font-extrabold text-sm text-white">Resources Coming Soon!</h4>
+              <p className="text-[11px] text-slate-400 font-semibold mt-0.5">We are compiling revision guides, test papers, and formula sheets. Stay tuned!</p>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
