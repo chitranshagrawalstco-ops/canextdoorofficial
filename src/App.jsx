@@ -14,6 +14,8 @@ import {
   ChevronRight, 
   Download, 
   Play, 
+  Pause,
+  RotateCcw,
   Users, 
   Layers, 
   Shield, 
@@ -45,13 +47,13 @@ const demoVideos = [
     description: 'Learn how to easily download and install the CA Next Door application on your local device.'
   },
   {
-    id: 'syllabus',
-    title: 'How to download subject and chapters',
-    url: 'https://www.youtube.com/embed/SjkB3_nILLA',
-    duration: '4:20',
-    badge: 'Database Setup',
-    icon: BookOpen,
-    description: 'Master the syllabus importing system to quickly set up your study targets and milestones.'
+    id: 'update',
+    title: 'How to update the app',
+    url: null,
+    duration: 'Coming Soon',
+    badge: 'App Updates',
+    icon: RotateCcw,
+    description: 'Learn how to keep your CA Next Door app updated to the latest version to access new features and bug fixes.'
   },
   {
     id: 'usage',
@@ -75,6 +77,48 @@ export default function App() {
   const [revisionVisualMode, setRevisionVisualMode] = useState('screenshot');
   const [mistakeVisualMode, setMistakeVisualMode] = useState('heatmap');
   const [showResourcesToast, setShowResourcesToast] = useState(false);
+
+  // Mock Test Arena States
+  const [testStage, setTestStage] = useState('reading'); // 'reading' | 'active' | 'eval' | 'summary'
+  const [testActiveQuestion, setTestActiveQuestion] = useState('CS-1'); // 'CS-1' | 'q1'
+  const [optionalQuestions, setOptionalQuestions] = useState([]); // list of optional questions marked
+  const [testIsPaused, setTestIsPaused] = useState(false);
+
+  // Timers
+  const [readingTimer, setReadingTimer] = useState(891); // 14 mins 51 secs (14*60 + 51 = 891)
+  const [activeTotalTimer, setActiveTotalTimer] = useState(10789); // 2 hrs 59 mins 49 secs (2*3600 + 59*60 + 49 = 10789)
+  const [activeQuestionTimer, setActiveQuestionTimer] = useState(11); // starts at 11s
+
+  // Times logged per question (actual times spent, in seconds)
+  const [timeSpentCS1, setTimeSpentCS1] = useState(25);
+  const [timeSpentQ1, setTimeSpentQ1] = useState(0);
+
+  // Marks scored for evaluation
+  const [scoreCS1, setScoreCS1] = useState('0.0');
+  const [scoreQ1, setScoreQ1] = useState('0.0');
+
+  // Timer effect
+  useEffect(() => {
+    if (testIsPaused) return;
+
+    const interval = setInterval(() => {
+      if (testStage === 'reading') {
+        setReadingTimer(prev => (prev > 0 ? prev - 1 : 0));
+      } else if (testStage === 'active') {
+        setActiveTotalTimer(prev => (prev > 0 ? prev - 1 : 0));
+        
+        // Update timers cleanly without causing side-effects inside state updaters
+        setActiveQuestionTimer(prev => prev + 1);
+        if (testActiveQuestion === 'CS-1') {
+          setTimeSpentCS1(prev => prev + 1);
+        } else {
+          setTimeSpentQ1(prev => prev + 1);
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [testStage, testActiveQuestion, testIsPaused]);
 
   const triggerResourcesToast = () => {
     setShowResourcesToast(true);
@@ -393,7 +437,7 @@ export default function App() {
       role: 'CA Student',
       color: 'bg-indigo-600 text-white',
       stat: '92% Revision Consistency',
-      text: 'CA Next Door changed how I structured my preparation. I used to schedule revisions on spreadsheets which kept breaking. The automated Review Scheduler generated revision rounds automatically, saving me at least 40+ planning hours.',
+      text: 'I used to spend every Sunday updating my study planner Excel sheet, only for it to break by Wednesday because of articleship work or long lectures. This app actually adjusts when I miss a target. It takes the anxiety out of backlogs and shows me exactly where I stand with my first and second revision rounds.',
       metric: '+45h Logged Study'
     },
     {
@@ -401,7 +445,7 @@ export default function App() {
       role: 'CA Student',
       color: 'bg-rose-500 text-white',
       stat: 'Reduced Backlog by 78%',
-      text: 'The dynamic backlog planner is magical. When I missed targets due to audits or college, it automatically redistributed the pending topics across the upcoming week instead of stressing me out with an impossible mountain.',
+      text: 'Balancing articleship with CA prep is brutal. I was always drowning in backlogs and feeling guilty. Here, if I miss a 4-hour DT lecture due to client audits, it doesn\'t ruin my week. The system just spreads out the pending topics across my next few study blocks. It feels like someone is actually managing the mess for me.',
       metric: '720h Total Study Tracked'
     },
     {
@@ -409,7 +453,7 @@ export default function App() {
       role: 'CA Student',
       color: 'bg-amber-400 text-slate-900',
       stat: '+32% Mock Test Growth',
-      text: 'The weak chapter detection is scary accurate. It pointed out that my consolidation accounting standards were causing my scores to drop in test series. Focused revisions on those specific chapters boosted my exam confidence.',
+      text: 'I was scoring 45-50 in my FR mock tests and couldn\'t figure out why. The weak chapter insights pointed out that I was consistently messing up Consolidation and Business Combinations. I stopped re-reading the chapters I was already good at and spent three days drilling down on those weak areas. My next mock score jumped to 68.',
       metric: '92% Accuracy Focus'
     }
   ];
@@ -533,6 +577,7 @@ export default function App() {
           <div className="hidden md:flex items-center gap-8 text-sm font-extrabold">
             <a href="#features" className="text-slate-300 hover:text-indigo-400 transition-colors">Features</a>
             <a href="#revision" className="text-slate-300 hover:text-indigo-400 transition-colors">Revision Engine</a>
+            <a href="#tests" className="text-slate-300 hover:text-indigo-400 transition-colors">Mock Tests</a>
             <a href="#workflow" className="text-slate-300 hover:text-indigo-400 transition-colors">Workflow</a>
             <a href="#why" className="text-slate-300 hover:text-indigo-400 transition-colors">Testimonials</a>
             <button 
@@ -594,6 +639,13 @@ export default function App() {
                 className="block text-slate-300 hover:text-indigo-400 font-extrabold py-2 border-b border-slate-800"
               >
                 Revision Engine
+              </a>
+              <a 
+                href="#tests" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-slate-300 hover:text-indigo-400 font-extrabold py-2 border-b border-slate-800"
+              >
+                Mock Tests
               </a>
               <a 
                 href="#workflow" 
@@ -1071,6 +1123,730 @@ export default function App() {
         </div>
       </section>
 
+      {/* 4.75 TIMED MOCK TESTS & SPEED ANALYTICS */}
+      <section id="tests" className="py-24 bg-slate-50/50 border-t border-b border-slate-200/60 z-10 px-6 relative overflow-hidden">
+        
+        {/* Glow Blob */}
+        <div className="absolute top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] w-[40vw] h-[40vw] rounded-full blur-[140px] opacity-[0.03] bg-indigo-500 pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto space-y-16">
+          <div className="text-center space-y-4 max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-1.5 bg-indigo-55/60 border border-indigo-100 rounded-full px-4 py-1.5 text-xs text-indigo-700 font-semibold uppercase tracking-wider" style={{ backgroundColor: 'rgba(238, 242, 255, 0.6)' }}>
+              ICAI Timed Exam Arena
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              Mock Test Arena & Speed Analytics
+            </h2>
+            <p className="text-lg text-slate-500">
+              Practice under real ICAI exam pressure. Track question-level pacing, evaluate answers honestly, and inspect detailed speed variance reports.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+            
+            {/* Left side: Explanations and interactive steps selection */}
+            <div className="lg:col-span-4 space-y-8">
+              <div className="space-y-4">
+                <h3 className="text-xl font-black text-slate-900">Track Pacing to Pass CA Exams</h3>
+                <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                  CA exams are notorious for being lengthy. Solving papers requires strict adherence to the <strong className="text-indigo-600">1.8 minutes per mark</strong> thumb rule. Our Mock Test interface helps you monitor and optimize this in real time.
+                </p>
+              </div>
+
+              {/* Step Tab Buttons */}
+              <div className="flex flex-col gap-3">
+                {[
+                  { id: 'reading', label: '1. Reading Mode Active', desc: 'Simulates the mandatory 15-minute analysis window before answering.' },
+                  { id: 'active', label: '2. Question Timer & PDF Reader', desc: 'Tracks actual time spent per question vs standard allotted time.' },
+                  { id: 'eval', label: '3. Self-Evaluation Matrix', desc: 'Compare against suggested answers and allocate marks.' },
+                  { id: 'summary', label: '4. Performance & Speed Report', desc: 'Get writing speed (marks/min), time variance, and AI insights.' }
+                ].map((tab) => {
+                  const isActive = testStage === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        setTestStage(tab.id);
+                        if (tab.id === 'active') {
+                          setActiveQuestionTimer(testActiveQuestion === 'CS-1' ? timeSpentCS1 : timeSpentQ1);
+                        }
+                      }}
+                      className={`w-full text-left p-4 rounded-2xl border border-black transition-all duration-200 ${
+                        isActive
+                          ? 'bg-indigo-600 text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] translate-x-[-1px] translate-y-[-1px]'
+                          : 'bg-white hover:bg-slate-50 text-slate-700 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px]'
+                      }`}
+                    >
+                      <h4 className="text-xs md:text-sm font-black uppercase tracking-wider">{tab.label}</h4>
+                      <p className={`text-[11px] mt-1 font-medium leading-relaxed ${isActive ? 'text-indigo-100' : 'text-slate-400'}`}>
+                        {tab.desc}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Extra Stats card */}
+              <div className="bg-white border border-black rounded-2xl p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-amber-100 text-amber-700 p-2 rounded-lg border border-black">
+                    <Clock size={16} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest font-mono">Pacing Alert</h4>
+                    <p className="text-[11px] text-slate-400 font-semibold">ICAI Golden Rule: 1.8 mins/mark</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-center text-xs">
+                  <div className="bg-slate-50 p-2.5 rounded-xl border border-black">
+                    <span className="text-[10px] text-slate-400 font-bold block">Standard Time</span>
+                    <span className="font-extrabold text-slate-800">19.8 Minutes</span>
+                  </div>
+                  <div className="bg-indigo-50 p-2.5 rounded-xl border border-indigo-200 text-indigo-700">
+                    <span className="text-[10px] text-indigo-400 font-bold block">Actual Taken</span>
+                    <span className="font-extrabold">
+                      {Math.floor((timeSpentCS1 + timeSpentQ1) / 60)}m {(timeSpentCS1 + timeSpentQ1) % 60}s
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right side: The Live Test Application Simulator Panel */}
+            <div className="lg:col-span-8">
+              <div className="w-full bg-slate-900 rounded-3xl border border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col p-0 relative group transition-all duration-300">
+                {/* Mock App Window Header Bar */}
+                <div className="bg-slate-950 px-4 py-3 border-b-2 border-black flex items-center justify-between">
+                  <div className="flex gap-1.5 items-center">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-450" style={{ backgroundColor: '#f87171' }} />
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-450" style={{ backgroundColor: '#fbbf24' }} />
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-450" style={{ backgroundColor: '#34d399' }} />
+                    <span className="ml-3 text-[11px] text-slate-400 font-bold uppercase tracking-wider font-mono">
+                      CA Next Door Test Console
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] text-slate-300 font-mono">
+                      {testStage === 'reading' && 'READING_MODE'}
+                      {testStage === 'active' && 'EXAM_IN_PROGRESS'}
+                      {testStage === 'eval' && 'SELF_EVALUATION'}
+                      {testStage === 'summary' && 'PERFORMANCE_SUMMARY'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Sub-Header context bar showing stage name */}
+                {testStage === 'reading' && (
+                  <div className="bg-indigo-950 text-indigo-200 border-b border-black py-2.5 px-6 flex justify-between items-center text-xs">
+                    <span className="font-extrabold flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-indigo-400 animate-ping" /> Reading Mode Active (Mark Optional Questions now)
+                    </span>
+                    <button
+                      onClick={() => {
+                        setTestStage('active');
+                        setActiveQuestionTimer(timeSpentCS1);
+                      }}
+                      className="bg-indigo-650 hover:bg-indigo-500 text-white font-extrabold px-3 py-1 rounded border border-black shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] text-[10px]"
+                      style={{ backgroundColor: '#4f46e5' }}
+                    >
+                      Start Answering Now →
+                    </button>
+                  </div>
+                )}
+
+                {/* Live App Screen Rendering Area */}
+                <div className="bg-slate-50 p-4 md:p-6 min-h-[420px] flex flex-col justify-between" style={{ backgroundColor: '#f1f5f9' }}>
+                  <AnimatePresence mode="wait">
+                    
+                    {/* STAGE 1: Reading Mode Active */}
+                    {testStage === 'reading' && (
+                      <motion.div
+                        key="stage-reading"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="space-y-6 w-full"
+                      >
+                        {/* Timer Header Banner */}
+                        <div className="flex flex-col md:flex-row justify-between items-center bg-indigo-950 text-white p-4 rounded-2xl border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-16 h-16 rounded-xl bg-indigo-900 border border-black flex flex-col items-center justify-center font-extrabold text-xs">
+                              <span className="text-[8px] text-indigo-300 font-mono uppercase">Read</span>
+                              <span className="text-sm font-black text-indigo-200 tracking-wider">
+                                {Math.floor(readingTimer / 60)}:{(readingTimer % 60).toString().padStart(2, '0')}
+                              </span>
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-black text-indigo-100 uppercase tracking-widest font-mono">Analyzing Paper</h4>
+                              <p className="text-[10px] text-indigo-300 font-semibold">Mark Optional Questions to structure your time.</p>
+                            </div>
+                          </div>
+                          
+                          <button
+                            onClick={() => {
+                              setTestStage('active');
+                              setActiveQuestionTimer(timeSpentCS1);
+                            }}
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold px-5 py-2.5 rounded-xl border border-black shadow-[2.5px_2.5px_0px_0px_rgba(255,255,255,0.15)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all text-xs flex items-center gap-1.5"
+                          >
+                            Start Answering Now <ArrowRight size={14} />
+                          </button>
+                        </div>
+
+                        {/* Middle panel showing exam context & PDF mockup */}
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                          {/* Subject details card */}
+                          <div className="md:col-span-5 bg-white border border-black rounded-2xl p-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] space-y-4">
+                            <div className="flex items-center gap-2 text-indigo-600">
+                              <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
+                              <span className="text-[10px] font-black uppercase tracking-wider font-mono">Mock Exam: JAN-26</span>
+                            </div>
+                            <h4 className="text-sm font-black text-slate-900">Financial Reporting (Ind AS)</h4>
+                            
+                            <div className="border-t border-slate-100 pt-3 space-y-2">
+                              <div className="flex justify-between items-center text-[10px]">
+                                <span className="text-slate-400 font-semibold">Total Weightage:</span>
+                                <span className="text-slate-800 font-bold">11.0 Marks</span>
+                              </div>
+                              <div className="flex justify-between items-center text-[10px]">
+                                <span className="text-slate-400 font-semibold">Mandatory Reading:</span>
+                                <span className="text-slate-800 font-bold">15 Minutes</span>
+                              </div>
+                            </div>
+
+                            {/* Mark Optional questions area */}
+                            <div className="border-t border-slate-100 pt-3 space-y-2">
+                              <span className="text-[9px] uppercase font-mono text-slate-400 font-black tracking-widest block">Optional Questions Selector</span>
+                              <div className="flex gap-2">
+                                {['q1'].map((q) => {
+                                  const isSelected = optionalQuestions.includes(q);
+                                  return (
+                                    <button
+                                      key={q}
+                                      onClick={() => {
+                                        setOptionalQuestions(prev => 
+                                          prev.includes(q) ? prev.filter(item => item !== q) : [...prev, q]
+                                        );
+                                      }}
+                                      className={`px-3 py-1.5 rounded-lg border text-xs font-black transition-all ${
+                                        isSelected 
+                                          ? 'bg-rose-50 border-rose-450 text-rose-700 shadow-[1.5px_1.5px_0px_0px_rgba(225,29,72,1)]' 
+                                          : 'bg-white border-black text-slate-700 shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)]'
+                                      }`}
+                                    >
+                                      {q} {isSelected ? ' (Optional)' : ' (Mark Optional)'}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Paper View mockup */}
+                          <div className="md:col-span-7 bg-slate-800 rounded-2xl border border-black p-4 flex flex-col justify-between shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-slate-350 font-mono text-[10px] space-y-4">
+                            <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+                              <span className="text-[9px] font-black uppercase text-indigo-400">PDF Reader View</span>
+                              <span className="text-slate-500">Page 1 of 41</span>
+                            </div>
+                            <div className="space-y-2 leading-relaxed">
+                              <div className="font-extrabold text-white text-xs border-b border-slate-700 pb-1 uppercase">PAPER - 1 : FINANCIAL REPORTING</div>
+                              <div className="text-slate-400">Part I - Multiple Choice Questions</div>
+                              <div className="text-indigo-300 mt-2">Case Scenario - I</div>
+                              <p className="text-[9px] text-slate-450 leading-normal line-clamp-4">
+                                You are auditing Fortunate Limited for the financial year ended 31st March 2025. Fortunate Limited prepares its financial statements on Companies (Indian Accounting Standards) Rules, 2015 (Ind AS). The following information is made available...
+                              </p>
+                            </div>
+                            <div className="bg-slate-900 border border-slate-750 p-2 rounded-lg text-slate-500 text-center font-bold">
+                              📄 Read Mode Active (No marking/drawing permitted)
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* STAGE 2: Timed Active Test */}
+                    {testStage === 'active' && (
+                      <motion.div
+                        key="stage-active"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="space-y-6 w-full"
+                      >
+                        {/* Real-time Header Control Bar from Screenshot 2 */}
+                        <div className="bg-white border border-black rounded-2xl p-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] grid grid-cols-1 md:grid-cols-12 items-center gap-4">
+                          {/* Total Time left */}
+                          <div className="md:col-span-3 flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                            <div>
+                              <span className="text-[10px] text-slate-400 font-mono font-bold block leading-none">TOTAL REMAINING</span>
+                              <span className="font-black text-slate-800 text-lg tracking-tight">
+                                {(() => {
+                                  const hours = Math.floor(activeTotalTimer / 3600);
+                                  const minutes = Math.floor((activeTotalTimer % 3600) / 60);
+                                  const seconds = activeTotalTimer % 60;
+                                  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                                })()}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Question Explorer */}
+                          <div className="md:col-span-3 border-l-0 md:border-l border-slate-200 pl-0 md:pl-4 flex flex-col justify-center">
+                            <span className="text-[9px] text-slate-400 font-mono font-black tracking-widest block uppercase mb-1">Question Explorer</span>
+                            <div className="flex gap-1.5">
+                              {['CS-1', 'q1'].map((q) => {
+                                const isSelected = testActiveQuestion === q;
+                                const isOptional = optionalQuestions.includes(q);
+                                return (
+                                  <button
+                                    key={q}
+                                    onClick={() => {
+                                      setTestActiveQuestion(q);
+                                      setActiveQuestionTimer(q === 'CS-1' ? timeSpentCS1 : timeSpentQ1);
+                                    }}
+                                    className={`px-2 py-1 text-[10px] font-black rounded-md border transition-all ${
+                                      isSelected
+                                        ? 'bg-indigo-650 border-black text-white shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]'
+                                        : isOptional
+                                          ? 'bg-rose-50 border-rose-300 text-rose-600 shadow-[1px_1px_0px_0px_rgba(225,29,72,0.2)] line-through'
+                                          : 'bg-white border-black text-slate-600 shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)]'
+                                    }`}
+                                  >
+                                    {q}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Attempting current question timer */}
+                          <div className="md:col-span-3 border-l-0 md:border-l border-slate-200 pl-0 md:pl-4">
+                            <span className="text-[9px] text-slate-400 font-mono font-bold block uppercase leading-none mb-1">
+                              Attempting <span className="bg-indigo-50 border border-indigo-100 text-indigo-700 px-1 rounded font-black text-[8px] uppercase">{testActiveQuestion}</span>
+                            </span>
+                            <span className="font-extrabold text-slate-800 text-lg tracking-tight">
+                              {(() => {
+                                const minutes = Math.floor(activeQuestionTimer / 60);
+                                const seconds = activeQuestionTimer % 60;
+                                return `00:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                              })()}
+                            </span>
+                            
+                            <div className="flex gap-1 mt-1 text-[8px] font-extrabold">
+                              <span className="bg-amber-100 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded uppercase">
+                                {testActiveQuestion === 'CS-1' ? '6 Marks' : '5 Marks'}
+                              </span>
+                              <span className="bg-sky-50 text-sky-850 border border-sky-200 px-1.5 py-0.5 rounded uppercase">
+                                {testActiveQuestion === 'CS-1' ? 'Std: 10.8m' : 'Std: 9.0m'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Control Buttons */}
+                          <div className="md:col-span-3 flex justify-end gap-2 shrink-0">
+                            <button
+                              onClick={() => setTestIsPaused(!testIsPaused)}
+                              className="px-3 py-2 border border-black bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-black shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1"
+                            >
+                              <Play size={12} className={testIsPaused ? 'fill-slate-700' : 'hidden'} />
+                              <Pause size={12} className={testIsPaused ? 'hidden' : ''} />
+                              {testIsPaused ? 'Resume' : 'Pause'}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setTestStage('eval');
+                                setTestIsPaused(true);
+                              }}
+                              className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black border border-black shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1"
+                            >
+                              <Check size={12} /> Submit
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Interactive testing sheet & PDF mockup */}
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                          {/* Left side: Answer notepad mockup */}
+                          <div className="md:col-span-6 bg-white border border-black rounded-2xl p-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between space-y-4">
+                            <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                              <span className="text-[10px] font-black uppercase text-slate-500 font-mono">Current Question Paper Notepad</span>
+                              <span className="text-[8px] bg-slate-100 border border-slate-200 text-slate-400 px-1.5 py-0.5 rounded font-mono font-bold">Draft Workspace</span>
+                            </div>
+                            <div className="space-y-3 flex-grow">
+                              <h4 className="text-xs font-black text-slate-900">
+                                {testActiveQuestion === 'CS-1' 
+                                  ? 'CS-1 (Consolidation of Entities)' 
+                                  : 'q1 (Fair Value Measurement - Ind AS 113)'}
+                              </h4>
+                              <textarea
+                                placeholder="Jot down structural formulas, calculated notes, and section reference codes here..."
+                                className="w-full min-h-[120px] bg-amber-50/20 border border-black p-3 rounded-xl text-xs font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder-slate-455 shadow-inner"
+                              />
+                            </div>
+                            <div className="text-[9px] text-slate-400 bg-slate-50 p-2 rounded-lg border border-slate-250">
+                              ℹ️ Real time tracking measures speed. Standard time limit is <strong>1.8 min / mark</strong>. Speed is updated live.
+                            </div>
+                          </div>
+
+                          {/* Right side: PDF Question paper mock */}
+                          <div className="md:col-span-6 bg-slate-800 rounded-2xl border border-black p-4 flex flex-col justify-between shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-slate-350 font-mono text-[9px] space-y-4 leading-relaxed">
+                            <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+                              <span className="text-[8px] font-black uppercase text-indigo-400">PDF Reader View</span>
+                              <span className="text-slate-500">Page 1 of 41</span>
+                            </div>
+                            
+                            {testActiveQuestion === 'CS-1' ? (
+                              <div className="space-y-1.5">
+                                <div className="font-extrabold text-white text-xs">CS-1: Entities Consolidation</div>
+                                <p className="text-slate-400 text-[9px]">
+                                  (i) On 1st April 2024, Fortunate Limited had issued a 2 year mandatorily convertible (single) bond of ₹20,000,000. There are no transaction costs. The terms require Fortunate Limited to make interest payment of ₹100,000 each at the end of the financial year 2024-2025 and 2025-2026. The bond will mandatorily convert into 10,000 ordinary shares on 31st March 2026.
+                                </p>
+                                <p className="text-slate-400 text-[9px]">
+                                  (ii) On 1st October 2024, Fortunate Limited issued 5 years, 9% per annum Optionally Convertible Debentures (OCD) for ₹4,00,00,000. The OCDs are convertible...
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="space-y-1.5">
+                                <div className="font-extrabold text-white text-xs">q1: Fair Value measurement</div>
+                                <p className="text-slate-400 text-[9px]">
+                                  Evaluate the fair value measurement of an asset held by Fortunate Limited which is traded in two active markets with different transaction costs. Define which market qualifies as the principal market under Ind AS 113.
+                                </p>
+                                <p className="text-slate-400 text-[9px]">
+                                  Provide detailed accounting journal entries to measure the initial valuation and reconcile the transaction cost variances.
+                                </p>
+                              </div>
+                            )}
+                            <div className="flex justify-end gap-1 pt-1.5 border-t border-slate-700">
+                              <button className="bg-slate-700 hover:bg-slate-600 text-white px-2 py-0.5 rounded text-[8px]">Zoom +</button>
+                              <button className="bg-slate-700 hover:bg-slate-600 text-white px-2 py-0.5 rounded text-[8px]">Zoom -</button>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* STAGE 3: Self-Evaluation */}
+                    {testStage === 'eval' && (
+                      <motion.div
+                        key="stage-eval"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="space-y-6 w-full max-w-2xl mx-auto"
+                      >
+                        {/* Alert header from Screenshot 3 */}
+                        <div className="flex items-start gap-4 bg-amber-50 border-2 border-black p-4 rounded-2xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                          <span className="p-2 bg-amber-100 text-amber-800 rounded-xl border border-black shrink-0 font-extrabold text-xs flex items-center gap-1">
+                            <Activity size={12} /> Evaluation
+                          </span>
+                          <div>
+                            <h3 className="font-black text-slate-900 text-sm md:text-base">Self-Evaluate Your Answers</h3>
+                            <p className="text-xs text-slate-500 mt-1 font-semibold">
+                              Check your answers against the suggested answers and allocate marks honestly for each question. Your actual taken time is shown for reference.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Evaluation Input Table Card */}
+                        <div className="bg-white border-2 border-black rounded-3xl p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-4">
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse text-xs table-fixed">
+                              <thead>
+                                <tr className="bg-slate-50 border-b border-black text-[10px] text-slate-400 font-mono font-black uppercase">
+                                  <th className="p-3 pl-4 w-1/4 text-left">Question</th>
+                                  <th className="p-3 w-1/4 text-left">Allocated Marks</th>
+                                  <th className="p-3 w-1/4 text-center">Time Taken</th>
+                                  <th className="p-3 pr-4 w-1/4 text-center">Marks Scored</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-150 font-bold text-slate-800">
+                                
+                                {/* Question 1 */}
+                                <tr>
+                                  <td className="p-3 pl-4 text-slate-900 font-black text-left w-1/4">CS-1</td>
+                                  <td className="p-3 text-slate-500 text-left w-1/4">6.0 Marks</td>
+                                  <td className="p-3 text-indigo-700 text-center w-1/4">
+                                    <span className="bg-indigo-50 border border-indigo-250 text-indigo-850 px-2 py-0.5 rounded text-[10px] font-mono font-black inline-block" style={{ color: '#4f46e5', backgroundColor: '#eef2ff' }}>
+                                      {Math.floor(timeSpentCS1 / 60)}m {timeSpentCS1 % 60}s
+                                    </span>
+                                  </td>
+                                  <td className="p-3 pr-4 text-center w-1/4">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <input 
+                                        type="number"
+                                        min="0"
+                                        max="6"
+                                        step="0.5"
+                                        value={scoreCS1}
+                                        onChange={(e) => setScoreCS1(e.target.value)}
+                                        className="w-16 border border-black rounded-lg px-2 py-1 text-center font-black focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] bg-slate-50"
+                                      />
+                                      <span className="text-[10px] text-slate-455">/ 6.0</span>
+                                    </div>
+                                  </td>
+                                </tr>
+
+                                {/* Question 2 */}
+                                <tr>
+                                  <td className="p-3 pl-4 text-slate-900 font-black text-left w-1/4">q1</td>
+                                  <td className="p-3 text-slate-500 text-left w-1/4">5.0 Marks</td>
+                                  <td className="p-3 text-indigo-700 text-center w-1/4">
+                                    <span className="bg-indigo-50 border border-indigo-250 text-indigo-850 px-2 py-0.5 rounded text-[10px] font-mono font-black inline-block" style={{ color: '#4f46e5', backgroundColor: '#eef2ff' }}>
+                                      {Math.floor(timeSpentQ1 / 60)}m {timeSpentQ1 % 60}s
+                                    </span>
+                                  </td>
+                                  <td className="p-3 pr-4 text-center w-1/4">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <input 
+                                        type="number"
+                                        min="0"
+                                        max="5"
+                                        step="0.5"
+                                        value={scoreQ1}
+                                        onChange={(e) => setScoreQ1(e.target.value)}
+                                        className="w-16 border border-black rounded-lg px-2 py-1 text-center font-black focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] bg-slate-50"
+                                      />
+                                      <span className="text-[10px] text-slate-455">/ 5.0</span>
+                                    </div>
+                                  </td>
+                                </tr>
+
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        {/* Submit button container */}
+                        <div className="flex justify-end pt-2">
+                          <button
+                            onClick={() => {
+                              setTestStage('summary');
+                            }}
+                            className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-2xl font-extrabold border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all text-xs"
+                          >
+                            Save Evaluation & Calculate
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* STAGE 4: Performance Summary */}
+                    {testStage === 'summary' && (
+                      <motion.div
+                        key="stage-summary"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="space-y-6 w-full"
+                      >
+                        {/* Score/Time Dashboard cards from Screenshot 4 */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          
+                          {/* Final Score Card */}
+                          <div className="bg-emerald-600 border border-black p-5 rounded-3xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-white space-y-1">
+                            <span className="text-[10px] font-black uppercase text-emerald-100 tracking-wider">Final Score</span>
+                            <div className="text-3xl font-black">
+                              {(() => {
+                                const totalScored = parseFloat(scoreCS1 || 0) + parseFloat(scoreQ1 || 0);
+                                const percentage = ((totalScored / 11.0) * 100).toFixed(1);
+                                return `${percentage}%`;
+                              })()}
+                            </div>
+                            <p className="text-xs text-emerald-100 font-semibold">
+                              {(() => {
+                                const totalScored = parseFloat(scoreCS1 || 0) + parseFloat(scoreQ1 || 0);
+                                return `${totalScored.toFixed(1)} / 11.0 marks`;
+                              })()}
+                            </p>
+                          </div>
+
+                          {/* Total Time Card */}
+                          <div className="bg-amber-500 border border-black p-5 rounded-3xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-slate-950 space-y-1">
+                            <span className="text-[10px] font-black uppercase text-amber-950 tracking-wider">Total Time</span>
+                            <div className="text-3xl font-black">
+                              {(() => {
+                                const totalTime = timeSpentCS1 + timeSpentQ1;
+                                const mins = Math.floor(totalTime / 60);
+                                const secs = totalTime % 60;
+                                return `${mins}m ${secs}s`;
+                              })()}
+                            </div>
+                            <p className="text-xs text-amber-950 font-semibold">Standard: 19.8 m</p>
+                          </div>
+
+                          {/* Writing Speed Card */}
+                          <div className="bg-indigo-650 border border-black p-5 rounded-3xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-white space-y-1" style={{ backgroundColor: '#4f46e5' }}>
+                            <span className="text-[10px] font-black uppercase text-indigo-100 tracking-wider">Writing Speed</span>
+                            <div className="text-3xl font-black">
+                              {(() => {
+                                const totalTime = timeSpentCS1 + timeSpentQ1;
+                                if (totalTime === 0) return '0.0';
+                                // Speed is total attempted marks output per minute
+                                const attemptedMarks = 11.0; 
+                                const speed = (attemptedMarks / (totalTime / 60)).toFixed(1);
+                                return speed;
+                              })()}
+                            </div>
+                            <p className="text-xs text-indigo-100 font-semibold">Marks / Minute</p>
+                          </div>
+
+                        </div>
+
+                        {/* Breakdown Table from Screenshot 4 */}
+                        <div className="bg-white border border-black rounded-3xl p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-4">
+                          <h4 className="text-sm font-black text-slate-900">Question-by-Question Breakdown</h4>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse text-xs">
+                              <thead>
+                                <tr className="bg-slate-50 border-b border-black text-[9px] text-slate-400 font-mono font-black uppercase">
+                                  <th className="p-3 pl-4">Question</th>
+                                  <th className="p-3">Score</th>
+                                  <th className="p-3">Standard Time</th>
+                                  <th className="p-3">Actual Time</th>
+                                  <th className="p-3">Variance</th>
+                                  <th className="p-3 pr-4">Efficiency</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-150 font-bold text-slate-800">
+                                
+                                {/* CS-1 Row */}
+                                <tr>
+                                  <td className="p-3 pl-4 text-slate-900 font-black">CS-1</td>
+                                  <td className="p-3 text-rose-600 font-black">{(parseFloat(scoreCS1 || 0)).toFixed(1)} / 6.0</td>
+                                  <td className="p-3 text-slate-400 font-mono">10m 48s</td>
+                                  <td className="p-3 text-slate-700 font-mono">
+                                    {Math.floor(timeSpentCS1 / 60)}m {timeSpentCS1 % 60}s
+                                  </td>
+                                  <td className="p-3">
+                                    {(() => {
+                                      const stdTimeSec = 648; 
+                                      const variance = stdTimeSec - timeSpentCS1;
+                                      const isPos = variance >= 0;
+                                      const absMins = Math.floor(Math.abs(variance) / 60);
+                                      const absSecs = Math.abs(variance) % 60;
+                                      return (
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black ${
+                                          isPos ? 'bg-emerald-50 text-emerald-800 border border-emerald-250' : 'bg-rose-50 text-rose-800 border border-rose-200'
+                                        }`}>
+                                          {isPos ? '+' : '-'}{absMins}m {absSecs}s
+                                        </span>
+                                      );
+                                    })()}
+                                  </td>
+                                  <td className="p-3 text-indigo-700 font-black pr-4">
+                                    {(() => {
+                                      if (timeSpentCS1 === 0) return '0.0 marks/m';
+                                      const eff = (parseFloat(scoreCS1 || 0) / (timeSpentCS1 / 60)).toFixed(1);
+                                      return `${eff} marks/m`;
+                                    })()}
+                                  </td>
+                                </tr>
+
+                                {/* q1 Row */}
+                                <tr>
+                                  <td className="p-3 pl-4 text-slate-900 font-black">q1</td>
+                                  <td className="p-3 text-rose-600 font-black">{(parseFloat(scoreQ1 || 0)).toFixed(1)} / 5.0</td>
+                                  <td className="p-3 text-slate-400 font-mono">9m 0s</td>
+                                  <td className="p-3 text-slate-700 font-mono">
+                                    {Math.floor(timeSpentQ1 / 60)}m {timeSpentQ1 % 60}s
+                                  </td>
+                                  <td className="p-3">
+                                    {(() => {
+                                      const stdTimeSec = 540; 
+                                      const variance = stdTimeSec - timeSpentQ1;
+                                      const isPos = variance >= 0;
+                                      const absMins = Math.floor(Math.abs(variance) / 60);
+                                      const absSecs = Math.abs(variance) % 60;
+                                      return (
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black ${
+                                          isPos ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'
+                                        }`}>
+                                          {isPos ? '+' : '-'}{absMins}m {absSecs}s
+                                        </span>
+                                      );
+                                    })()}
+                                  </td>
+                                  <td className="p-3 text-indigo-700 font-black pr-4">
+                                    {(() => {
+                                      if (timeSpentQ1 === 0) return '0.0 marks/m';
+                                      const eff = (parseFloat(scoreQ1 || 0) / (timeSpentQ1 / 60)).toFixed(1);
+                                      return `${eff} marks/m`;
+                                    })()}
+                                  </td>
+                                </tr>
+
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        {/* AI Insights Card from Screenshot 4 */}
+                        <div className="bg-indigo-50 border border-indigo-250 p-5 rounded-3xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex gap-4 items-start">
+                          <span className="p-2 bg-indigo-100 text-indigo-700 rounded-xl border border-black font-extrabold text-xs shrink-0 font-mono flex items-center gap-1">
+                            <Sparkles size={12} className="fill-indigo-650" /> AI Insight
+                          </span>
+                          <div className="space-y-1 text-xs">
+                            <h4 className="font-black text-slate-900">AI Performance Analysis</h4>
+                            <p className="text-slate-500 font-semibold leading-relaxed">
+                              {(() => {
+                                const totalTime = timeSpentCS1 + timeSpentQ1;
+                                const speed = totalTime > 0 ? (11.0 / (totalTime / 60)) : 0;
+                                if (speed < 1.0) {
+                                  return "Your writing speed (marks output per minute) is low. Try to stick strictly to the 1.8 mins/mark thumb rule to complete the paper on time.";
+                                } else if (speed > 4.0) {
+                                  return "Your writing speed is extremely fast, which might suggest high accuracy or a rushed attempt. Make sure conceptual clarity is maintained during calculations!";
+                                } else {
+                                  return "Your writing speed and pacing are optimal. Maintaining this marks-to-minute ratio will ensure comfortable completion of all sections in the final exam.";
+                                }
+                              })()}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Action buttons to restart simulator */}
+                        <div className="flex justify-between items-center pt-2">
+                          <button
+                            onClick={() => {
+                              setTestStage('reading');
+                              setReadingTimer(891);
+                              setActiveTotalTimer(10789);
+                              setActiveQuestionTimer(11);
+                              setTimeSpentCS1(25);
+                              setTimeSpentQ1(0);
+                              setScoreCS1('0.0');
+                              setScoreQ1('0.0');
+                              setOptionalQuestions([]);
+                              setTestIsPaused(false);
+                            }}
+                            className="px-4 py-2 border border-black bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-black shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2"
+                          >
+                            <RotateCcw size={12} /> Restart Exam Simulator
+                          </button>
+
+                          <a
+                            href="https://t.me/canextdoorofficial"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-5 py-2.5 rounded-xl border border-black shadow-[2.5px_2.5px_0px_0px_rgba(0,0,0,1)] text-xs flex items-center gap-1.5"
+                          >
+                            Download Full App For Custom Tests <ArrowRight size={14} />
+                          </a>
+                        </div>
+
+                      </motion.div>
+                    )}
+
+                  </AnimatePresence>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       {/* 5. STUDENT WORKFLOW SECTION */}
       <section id="workflow" className="py-24 max-w-7xl mx-auto px-6 z-10 relative">
         <div className="space-y-16">
@@ -1192,7 +1968,7 @@ export default function App() {
                       {activeWorkflowStep === 0 && 'ca-next-door.app/dashboard'}
                       {activeWorkflowStep === 1 && 'ca-next-door.app/daily-tasks'}
                       {activeWorkflowStep === 2 && 'ca-next-door.app/revision-planner'}
-                      {activeWorkflowStep === 3 && 'ca-next-door.app/mistake-book'}
+                      {activeWorkflowStep === 3 && 'ca-next-door.app/mock-tests'}
                       {activeWorkflowStep === 4 && 'ca-next-door.app/day-log'}
                       {activeWorkflowStep === 5 && 'ca-next-door.app/late-tasks'}
                     </span>
@@ -1222,8 +1998,8 @@ export default function App() {
                     )}
                     {activeWorkflowStep === 3 && (
                       <img 
-                        src="/mistake-matrix.png" 
-                        alt="Error Density Heatmap Matrix screenshot" 
+                        src="/mock-test-preview.png" 
+                        alt="Simulated Mock Test Session screenshot" 
                         className="w-full h-auto object-cover" 
                       />
                     )}
@@ -1379,6 +2155,12 @@ export default function App() {
                 Revision Optimizer
               </a>
               <a 
+                href="#tests" 
+                className="inline-block px-3 py-1.5 rounded-lg border border-transparent hover:border-black hover:bg-slate-950 hover:text-white hover:translate-x-[-1px] hover:translate-y-[-1px] font-bold text-slate-400 hover:shadow-[1.5px_1.5px_0px_0px_rgba(99,102,241,1)] transition-all w-max"
+              >
+                Mock Test Arena
+              </a>
+              <a 
                 href="#workflow" 
                 className="inline-block px-3 py-1.5 rounded-lg border border-transparent hover:border-black hover:bg-slate-950 hover:text-white hover:translate-x-[-1px] hover:translate-y-[-1px] font-bold text-slate-400 hover:shadow-[1.5px_1.5px_0px_0px_rgba(99,102,241,1)] transition-all w-max"
               >
@@ -1496,11 +2278,13 @@ export default function App() {
                               }`}>
                                 {video.badge}
                               </span>
-                              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-black ${
-                                isSelected ? 'bg-indigo-700 text-white border-indigo-900' : 'bg-slate-50 text-slate-600'
-                              }`}>
-                                {video.duration}
-                              </span>
+                              {video.duration === 'Coming Soon' && (
+                                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-black ${
+                                  isSelected ? 'bg-indigo-700 text-white border-indigo-900' : 'bg-slate-50 text-slate-600'
+                                }`}>
+                                  {video.duration}
+                                </span>
+                              )}
                             </div>
                             <h4 className="text-xs md:text-sm font-black leading-snug truncate">{video.title}</h4>
                             <p className={`text-[10px] leading-relaxed line-clamp-2 ${
@@ -1551,9 +2335,11 @@ export default function App() {
                                 Video Coming Soon
                               </span>
                               <h3 className="text-xl md:text-2xl font-black text-white tracking-tight">{activeVideo.title}</h3>
-                              <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                                We are putting the finishing touches on a masterclass walkthrough that guides you through the spaced revision workflow and tracker engine.
-                              </p>
+                              {activeVideo.description && (
+                                <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                                  {activeVideo.description}
+                                </p>
+                              )}
                             </div>
 
                             {/* Quick Action to Telegram */}
@@ -1582,9 +2368,6 @@ export default function App() {
                           <p className="text-slate-400 font-medium text-[10px] uppercase font-mono tracking-wider">Now Playing</p>
                           <h4 className="text-white font-extrabold truncate">{activeVideo.title}</h4>
                         </div>
-                        <span className="text-slate-400 font-mono text-[10px] shrink-0">
-                          {activeVideo.url ? '📺 Standard Embed' : '⏳ Recording...'}
-                        </span>
                       </div>
                     );
                   })()}
